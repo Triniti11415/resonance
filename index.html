@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RESONANCE — Химия Души</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #08080a;
+            --card-bg: #101014;
+            --accent-gold: #d4af37;
+            --accent-gold-light: #f3e5ab;
+            --border-gold: rgba(212, 175, 55, 0.25);
+            --text-main: #f8f8f8;
+            --text-muted: #8a8a93;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 80vh;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Главный экран */
+        .brand-header {
+            text-align: center;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .badge-18 {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            border: 1px solid var(--border-gold);
+            padding: 6px 16px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 32px;
+            background: rgba(212, 175, 55, 0.03);
+        }
+
+        .logo-symbol {
+            font-size: 42px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--accent-gold-light), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            padding: 0 10px;
+        }
+
+        /* Кнопка */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: transparent;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold-light);
+            font-size: 13px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.08);
+        }
+
+        .btn:active {
+            background: rgba(212, 175, 55, 0.15);
+            transform: scale(0.98);
+        }
+
+        /* Выбор пола */
+        .section-title {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .main-title {
+            font-size: 22px;
+            font-weight: 300;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .gender-options {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .gender-card {
+            flex: 1;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gender-card.active {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold-light);
+            background: rgba(212, 175, 55, 0.06);
+        }
+
+        /* Текстовое поле */
+        textarea {
+            width: 100%;
+            height: 140px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 18px;
+            color: var(--text-main);
+            font-size: 15px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-gold);
+        }
+
+        /* Экран ожидания */
+        .loader-box {
+            text-align: center;
+            margin: auto;
+        }
+
+        .pulse-ring {
+            width: 80px;
+            height: 80px;
+            border: 1px solid var(--border-gold);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            animation: ringPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes ringPulse {
+            0% { transform: scale(0.9); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
+            100% { transform: scale(0.9); opacity: 0.3; }
+        }
+
+        /* Результат */
+        .match-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: auto;
+            margin-bottom: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .match-name {
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .match-score {
+            font-size: 15px;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+        }
+
+        .match-bio {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .match-chem {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 16px;
+            font-size: 13px;
+            color: var(--accent-gold-light);
+            line-height: 1.6;
+        }
+
+        /* Чат */
+        .chat-wrap {
+            display: flex;
+            flex-direction: column;
+            height: 82vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .chat-top {
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-gold);
+            font-size: 14px;
+        }
+
+        .chat-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .msg {
+            max-width: 82%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .msg.in {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.out {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--border-gold);
+            color: var(--accent-gold-light);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bottom {
+            padding: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 12px 18px;
+            color: #fff;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .send-btn {
+            background: transparent;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Экран 1: Главная -->
+        <div id="screen-1" class="screen active">
+            <div class="brand-header">
+                <div class="badge-18">18+ • Private Resonance</div>
+                <div class="logo-symbol">✦</div>
+                <h1>Resonance</h1>
+                <p class="subtitle">Ментальная настройка и поиск глубинного совпадения полярностей.</p>
+            </div>
+            <button class="btn" onclick="nextScreen('gender')">Подтвердить (18+) и войти</button>
+        </div>
+
+        <!-- Экран 2: Настройка Пола -->
+        <div id="screen-gender" class="screen">
+            <div style="margin-top: 20px;">
+                <div class="section-title">Фильтрация</div>
+                <div class="main-title">Параметры резонанса</div>
+
+                <div class="section-title" style="margin-bottom: 8px;">Ваш пол:</div>
+                <div class="gender-options">
+                    <div class="gender-card" onclick="setGender('my', 'male', this)">Мужчина</div>
+                    <div class="gender-card active" onclick="setGender('my', 'female', this)">Женщина</div>
+                </div>
+
+                <div class="section-title" style="margin-bottom: 8px;">Ищете:</div>
+                <div class="gender-options">
+                    <div class="gender-card active" onclick="setGender('target', 'male', this)">Мужчину</div>
+                    <div class="gender-card" onclick="setGender('target', 'female', this)">Женщину</div>
+                </div>
+            </div>
+            <button class="btn" onclick="nextScreen(2)">Продолжить</button>
+        </div>
+
+        <!-- Экран 3: Вопросы -->
+        <div id="screen-2" class="screen">
+            <div style="margin-top: 20px;">
+                <div class="section-title" id="qNum">Шаг 1 из 3</div>
+                <div class="main-title" id="qTitle">Опишите момент, когда вы чувствуете абсолютное наполнение и живую энергию?</div>
+                <textarea id="userInput" placeholder="Ваши ощущения, мысли..."></textarea>
+            </div>
+            <button class="btn" onclick="handleQuestion()">Далее</button>
+        </div>
+
+        <!-- Экран 4: Сканирование -->
+        <div id="screen-3" class="screen">
+            <div class="loader-box">
+                <div class="pulse-ring"></div>
+                <div class="section-title" id="loadText">Синхронизация частот...</div>
+            </div>
+        </div>
+
+        <!-- Экран 5: Результат -->
+        <div id="screen-4" class="screen">
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-name" id="mName">Александр, 31</div>
+                    <div class="match-score">98.6%</div>
+                </div>
+                <p class="match-bio" id="mBio">Архитектор смыслов и стратег. Ценит глубину, тишину, точность решений и безупречный стиль.</p>
+                <div class="match-chem" id="mChem">
+                    Ваша ментальная матрица показывает абсолютное совпадение ключевых ценностей.
+                </div>
+            </div>
+            <button class="btn" onclick="openChat()">Открыть связь</button>
+        </div>
+
+        <!-- Экран 6: Чат -->
+        <div id="screen-chat" class="screen">
+            <div class="chat-wrap">
+                <div class="chat-top">
+                    <div class="avatar" id="cAvatar">A</div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 400;" id="cName">Александр</div>
+                        <div style="font-size: 11px; color: var(--accent-gold);">Резонанс 98.6%</div>
+                    </div>
+                </div>
+                <div class="chat-body" id="chatMsgs"></div>
+                <div class="chat-bottom">
+                    <input type="text" class="chat-input" id="msgIn" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendMsg()">
+                    <button class="send-btn" onclick="sendMsg()">➔</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myGender = 'female';
+        let targetGender = 'male';
+        let partner = null;
+
+        const maleList = [
+            {
+                name: "Александр, 31",
+                bio: "Стратег и архитектор сложных систем. Ценит глубину мысли, тишину, верность слову и эстетику в деталях.",
+                chem: "Фундаментальное совпадение темпа восприятия мира и ценностной матрицы.",
+                greet: "Приветствую. Приятно видеть, когда частоты совпадают настолько точно. О чём размышляешь?"
+            },
+            {
+                name: "Марк, 29",
+                bio: "Исследователь интеллекта и эстетики. Ищет тонкое понимание без лишних слов и стремительное развитие.",
+                chem: "Высокая степень взаимного притяжения и эстетического резонанса.",
+                greet: "Здравствуй! Рад нашему совпадению. Как твоё настроение?"
+            }
+        ];
+
+        const femaleList = [
+            {
+                name: "Элеонора, 27",
+                bio: "Создатель смысловых пространств. Ценит тишину утреннего города, кофе, глубину и честность в общении.",
+                chem: "Зеркальное отражение ваших внутренних ориентиров и паттернов.",
+                greet: "Привет... Твой резонанс действительно особенный. Рада знакомству!"
+            },
+            {
+                name: "Виктория, 25",
+                bio: "Дизайнер визуальных миров. Ценит гармонию, интеллект, редкие ароматы и искреннюю глубину.",
+                chem: "Полное совпадение эмоционального спектра и взглядов.",
+                greet: "Добрый вечер! Наш процент совпадения впечатляет. Поговорим?"
+            }
+        ];
+
+        const questions = [
+            "Опишите момент, когда вы чувствуете абсолютное наполнение и живую энергию?",
+            "Какое качество в людях вы считаете самым притягательным и редким?",
+            "Ваш внутренний мир — это спокойный океан или ритм ночного города? Почему?"
+        ];
+
+        function setGender(type, val, el) {
+            el.parentElement.querySelectorAll('.gender-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            if(type === 'my') myGender = val;
+            if(type === 'target') targetGender = val;
+        }
+
+        function nextScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if(typeof id === 'number') {
+                document.getElementById(`screen-${id}`).classList.add('active');
+            } else {
+                document.getElementById(`screen-${id}`).classList.add('active');
+            }
+        }
+
+        let qIdx = 0;
+        function handleQuestion() {
+            qIdx++;
+            if(qIdx < questions.length) {
+                document.getElementById('qNum').innerText = `Шаг ${qIdx + 1} из 3`;
+                document.getElementById('qTitle').innerText = questions[qIdx];
+                document.getElementById('userInput').value = '';
+            } else {
+                nextScreen(3);
+                setTimeout(() => {
+                    renderMatch();
+                    nextScreen(4);
+                }, 2500);
+            }
+        }
+
+        function renderMatch() {
+            const list = targetGender === 'male' ? maleList : femaleList;
+            partner = list[Math.floor(Math.random() * list.length)];
+
+            document.getElementById('mName').innerText = partner.name;
+            document.getElementById('mBio').innerText = partner.bio;
+            document.getElementById('mChem').innerText = partner.chem;
+        }
+
+        function openChat() {
+            nextScreen('chat');
+            document.getElementById('cName').innerText = partner.name.split(',')[0];
+            document.getElementById('cAvatar').innerText = partner.name[0];
+            
+            const box = document.getElementById('chatMsgs');
+            box.innerHTML = '';
+            
+            setTimeout(() => {
+                addMsg(partner.greet, 'in');
+            }, 600);
+        }
+
+        function sendMsg() {
+            const input = document.getElementById('msgIn');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            addMsg(txt, 'out');
+            input.value = '';
+
+            setTimeout(() => {
+                addMsg("Красивая мысль... В этом чувствуется особая глубина.", 'in');
+            }, 1600);
+        }
+
+        function addMsg(txt, type) {
+            const box = document.getElementById('chatMsgs');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerText = txt;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
